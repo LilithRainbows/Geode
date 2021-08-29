@@ -35,12 +35,12 @@ namespace ConsoleBotCSharp
             ConsoleBot.BotSendMessage("Use /help to get info.");
         }
 
-        private void ConsoleBot_OnBotLoaded(object sender, string e)
+        private void ConsoleBot_OnBotLoaded(string e)
         {
             BotWelcome(); //Show welcome message when ConsoleBot loaded
         }
 
-        private void ConsoleBot_OnMessageReceived(object sender, string e)
+        private void ConsoleBot_OnMessageReceived(string e)
         {
             switch (e.ToLower()) //Handle received message
             {
@@ -86,17 +86,12 @@ namespace ConsoleBotCSharp
             }
         }
 
-        private void Extension_OnCriticalErrorEvent(object sender, string e)
+        private void Extension_OnCriticalErrorEvent(string e)
         {
             ShowInTaskbar = true;
             Activate();
             MessageBox.Show(e + ".", "Critical error", MessageBoxButton.OK, MessageBoxImage.Error); //Show extension critical error
             Environment.Exit(0);
-        }
-
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            ConsoleBot.HideBot(); //Hide bot before app closes
         }
     }
 }

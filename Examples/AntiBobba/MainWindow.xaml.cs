@@ -11,7 +11,7 @@ namespace AntiBobba
     {
         public ConsoleBot ConsoleBot;
         public GeodeExtension Extension;
-        public bool IsEnabled = false;
+        public bool IsBotEnabled = false;
 
         public MainWindow()
         {
@@ -43,7 +43,7 @@ namespace AntiBobba
         public void ShowEnabledInfo()
         {
             ConsoleBot.BotSendMessage("This tool can lead to account ban/mute, use at your own risk!");
-            if (IsEnabled == true)
+            if (IsBotEnabled == true)
             {
                 ConsoleBot.BotSendMessage("BobbaBlock is enabled, use /stop to stop.");
             }
@@ -55,13 +55,13 @@ namespace AntiBobba
 
         public void StartFilter()
         {
-            IsEnabled = true;
+            IsBotEnabled = true;
             ShowEnabledInfo();
         }
 
         public void StopFilter()
         {
-            IsEnabled = false;
+            IsBotEnabled = false;
             ShowEnabledInfo();
         }
 
@@ -86,12 +86,12 @@ namespace AntiBobba
             return stringBuilder.ToString();
         }
 
-        private void ConsoleBot_OnBotLoaded(object sender, string e)
+        private void ConsoleBot_OnBotLoaded(string e)
         {
             BotWelcome(); //Show welcome message when ConsoleBot loaded
         }
 
-        private void ConsoleBot_OnMessageReceived(object sender, string e)
+        private void ConsoleBot_OnMessageReceived(string e)
         {
             switch (e.ToLower()) //Handle received message
             {
@@ -115,14 +115,14 @@ namespace AntiBobba
             }
         }
 
-        private void Extension_OnDataInterceptEvent(object sender, DataInterceptedEventArgs e)
+        private void Extension_OnDataInterceptEvent(DataInterceptedEventArgs e)
         {
-            if (Extension.Out.Chat.Match(e) && IsEnabled) //Public chat
+            if (Extension.Out.Chat.Match(e) && IsBotEnabled) //Public chat
             {
                 e.IsBlocked = true;
                 Extension.SendToServerAsync(Extension.Out.Chat, BypassFilter(e.Packet.ReadUTF8()), e.Packet.ReadInt32(), e.Packet.ReadInt32());
             }
-            if (Extension.Out.Whisper.Match(e) && IsEnabled) //Whisper
+            if (Extension.Out.Whisper.Match(e) && IsBotEnabled) //Whisper
             {
                 string WhisperOriginal = e.Packet.ReadUTF8();
                 string WhisperDestination = WhisperOriginal.Remove(WhisperOriginal.IndexOf(" "));
@@ -131,7 +131,7 @@ namespace AntiBobba
                 e.IsBlocked = true;
                 Extension.SendToServerAsync(Extension.Out.Whisper, WhisperModded, e.Packet.ReadInt32());
             }
-            if (Extension.Out.SendMsg.Match(e) && IsEnabled) //Console chat
+            if (Extension.Out.SendMsg.Match(e) && IsBotEnabled) //Console chat
             {
                 int MessageDestination = e.Packet.ReadInt32();
                 if (MessageDestination == ConsoleBot.BotID)
@@ -147,17 +147,12 @@ namespace AntiBobba
             }
         }
 
-        private void Extension_OnCriticalErrorEvent(object sender, string e)
+        private void Extension_OnCriticalErrorEvent(string e)
         {
             ShowInTaskbar = true;
             Activate();
             MessageBox.Show(e + ".", "Critical error", MessageBoxButton.OK, MessageBoxImage.Error); //Show extension critical error
             Environment.Exit(0);
-        }
-
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            ConsoleBot.HideBot(); //Hide bot before app closes
         }
     }
 }

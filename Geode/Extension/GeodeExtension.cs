@@ -13,6 +13,7 @@ using Geode.Habbo.Messages;
 using Geode.Network.Protocol;
 using System.Net.NetworkInformation;
 using Geode.Habbo.Packages;
+using System.Runtime.Loader;
 
 namespace Geode.Extension
 {
@@ -26,14 +27,15 @@ namespace Geode.Extension
 
         public bool IsConnected { get; private set; } = false;
         public bool DisableEventHandlers = false;
-        public event EventHandler<DataInterceptedEventArgs> OnDataInterceptEvent;
-        public event EventHandler<HPacket> OnDoubleClickEvent;
-        public event EventHandler<HPacket> OnConnectedEvent;
-        public event EventHandler<HPacket> OnDisconnectedEvent;
-        public event EventHandler<string> OnCriticalErrorEvent;
-        public event EventHandler<int> OnEntitiesLoadedEvent;
-        public event EventHandler<int> OnWallItemsLoadedEvent;
-        public event EventHandler<int> OnFloorObjectsLoadedEvent;
+        public event Action<DataInterceptedEventArgs> OnDataInterceptEvent;
+        public event Action<HPacket> OnDoubleClickEvent;
+        public event Action<HPacket> OnConnectedEvent;
+        public event Action<HPacket> OnDisconnectedEvent;
+        public event Action<string> OnCriticalErrorEvent;
+        public event Action<int> OnEntitiesLoadedEvent;
+        public event Action<int> OnWallItemsLoadedEvent;
+        public event Action<int> OnFloorObjectsLoadedEvent;
+        public event Action OnStoppingEvent;
 
         public bool MessagesInfo_Failed = false;
         private HNode _installer { get; set; }
@@ -76,6 +78,15 @@ namespace Geode.Extension
             this.Author = Author;
             this.UtilizingOnDoubleClick = UtilizingOnDoubleClick;
             this.LeaveButtonVisible = LeaveButtonVisible;
+            AssemblyLoadContext.Default.Unloading += AssemblyUnloading;
+        }
+
+        private void AssemblyUnloading(AssemblyLoadContext e)
+        {
+            if (DisableEventHandlers == false)
+            {
+                try { OnStoppingEvent.Invoke(); } catch { }; //Invoke event handler
+            }
         }
 
         private string GetCommandLineArg(string RequestedParameter)
@@ -244,6 +255,10 @@ namespace Geode.Extension
 
         public void Stop()
         {
+            if (DisableEventHandlers == false)
+            {
+                try { OnStoppingEvent.Invoke(); } catch { }; //Invoke event handler
+            }
             Dispose();
         }
 
@@ -251,21 +266,21 @@ namespace Geode.Extension
         {
             if (DisableEventHandlers == false)
             {
-                try { OnEntitiesLoadedEvent.Invoke(this, count); } catch { }; //Invoke event handler
+                try { OnEntitiesLoadedEvent.Invoke(count); } catch { }; //Invoke event handler
             }
         }
         public void OnWallItemsLoaded(int count)
         {
             if (DisableEventHandlers == false)
             {
-                try { OnWallItemsLoadedEvent.Invoke(this, count); } catch { }; //Invoke event handler
+                try { OnWallItemsLoadedEvent.Invoke(count); } catch { }; //Invoke event handler
             }
         }
         public void OnFloorObjectsLoaded(int count)
         {
             if (DisableEventHandlers == false)
             {
-                try { OnFloorObjectsLoadedEvent.Invoke(this, count); } catch { }; //Invoke event handler
+                try { OnFloorObjectsLoadedEvent.Invoke(count); } catch { }; //Invoke event handler
             }
         }
 
@@ -275,7 +290,7 @@ namespace Geode.Extension
         {
             if (DisableEventHandlers == false)
             {
-                try { OnDoubleClickEvent.Invoke(this, packet); } catch { }; //Invoke event handler
+                try { OnDoubleClickEvent.Invoke(packet); } catch { }; //Invoke event handler
             }
         }
         public virtual void OnInfoRequest(HPacket packet)
@@ -352,7 +367,7 @@ namespace Geode.Extension
 
             if (IsConnected && DisableEventHandlers == false)
             {
-                try { OnDataInterceptEvent.Invoke(this, data); } catch { };//Invoke event handler
+                try { OnDataInterceptEvent.Invoke(data); } catch { };//Invoke event handler
             }
             if (MessagesInfo_Failed == false)
             {
@@ -439,7 +454,7 @@ namespace Geode.Extension
             IsConnected = true;
             if (DisableEventHandlers == false)
             {
-                try { OnConnectedEvent.Invoke(this, packet); } catch { };//Invoke event handler
+                try { OnConnectedEvent.Invoke(packet); } catch { };//Invoke event handler
             }
         }
         public virtual void OnDisconnected(HPacket packet)
@@ -450,7 +465,7 @@ namespace Geode.Extension
             _floorObjects.Clear();
             if (DisableEventHandlers == false)
             {
-                try { OnDisconnectedEvent.Invoke(this, packet); } catch { }; //Invoke event handler
+                try { OnDisconnectedEvent.Invoke(packet); } catch { }; //Invoke event handler
             }
         }
         public virtual void OnCriticalError(string error_desc)
@@ -458,7 +473,7 @@ namespace Geode.Extension
             Dispose();
             if (DisableEventHandlers == false)
             {
-                try { OnCriticalErrorEvent.Invoke(this, error_desc); } catch { }; //Invoke event handler
+                try { OnCriticalErrorEvent.Invoke(error_desc); } catch { }; //Invoke event handler
             }
         }
 

@@ -1,5 +1,4 @@
-﻿Imports System.ComponentModel
-Imports Geode.Extension
+﻿Imports Geode.Extension
 
 Class MainWindow
     Public WithEvents Extension As GeodeExtension
@@ -17,11 +16,11 @@ Class MainWindow
         ConsoleBot.BotSendMessage("Use /help to get info.")
     End Sub
 
-    Private Sub ConsoleBot_OnBotLoaded(sender As Object, e As String) Handles ConsoleBot.OnBotLoaded
+    Private Sub ConsoleBot_OnBotLoaded(e As String) Handles ConsoleBot.OnBotLoaded
         BotWelcome() 'Show welcome message when ConsoleBot loaded
     End Sub
 
-    Private Sub ConsoleBot_OnMessageReceived(sender As Object, e As String) Handles ConsoleBot.OnMessageReceived
+    Private Sub ConsoleBot_OnMessageReceived(e As String) Handles ConsoleBot.OnMessageReceived
         Select Case e.ToLower 'Handle received message
             Case "/help"
                 ConsoleBot.BotSendMessage("Commands:")
@@ -42,14 +41,11 @@ Class MainWindow
         End Select
     End Sub
 
-    Private Sub Extension_OnCriticalErrorEvent(sender As Object, e As String) Handles Extension.OnCriticalErrorEvent
+    Private Sub Extension_OnCriticalErrorEvent(e As String) Handles Extension.OnCriticalErrorEvent
         ShowInTaskbar = True
         Activate()
         MsgBox(e & ".", MsgBoxStyle.Critical, "Critical error") 'Show extension critical error
         Environment.Exit(0)
     End Sub
 
-    Private Sub MainWindow_Closing(sender As Object, e As CancelEventArgs) Handles Me.Closing
-        ConsoleBot.HideBot() 'Hide bot before app closes
-    End Sub
 End Class

@@ -6,7 +6,6 @@ namespace Geode.Extension
     public class ConsoleBot
     {
         private GeodeExtension Extension;
-        public event EventHandler<string> OnMessageReceived;
         public readonly int BotID = new Random().Next(999000000, 999999999);
         public string BotName { get; private set; }
         public string BotMotto { get; private set; }
@@ -16,7 +15,8 @@ namespace Geode.Extension
         public string BotCreatorName { get; private set; }
         public string BotCreatorLook { get; private set; }
         private bool IsBotVisible = false;
-        public event EventHandler<string> OnBotLoaded;
+        public event Action<string> OnBotLoaded;
+        public event Action<string> OnMessageReceived;
 
         public ConsoleBot(GeodeExtension Extension, string BotName, string BotMotto = "Console bot.", string BotLook = "hd-3704-29.ch-3135-95.lg-3136-95", string BotBadges = "BOT FR17A NO83 ITB26 NL446", string BotCreationDate = "W-W-1984", string BotCreatorName = "Lilith", string BotCreatorLook = "hr-3870-45.hd-600-10.ch-665-71.lg-3781-100-71.ha-3614-91-95.he-3469-1412.fa-3276-1412.ca-3702-71-71")
         {
@@ -31,19 +31,28 @@ namespace Geode.Extension
                 this.BotCreatorName = BotCreatorName;
                 this.BotCreatorLook = BotCreatorLook;
                 this.Extension.OnConnectedEvent += Extension_OnConnectedEvent;
+                this.Extension.OnStoppingEvent += Extension_OnStoppingEvent;
             }
         }
 
-        private void Extension_OnConnectedEvent(object sender, Network.Protocol.HPacket e)
+        private void Extension_OnConnectedEvent(Network.Protocol.HPacket e)
         {
             if (IsBotVisible)
             {
                 ShowBot();
-                OnBotLoaded.Invoke(this, "DefaultLoad");
+                OnBotLoaded.Invoke("DefaultLoad");
             }
         }
 
-        private void Extension_OnDataInterceptEvent(object sender, DataInterceptedEventArgs e)
+        private void Extension_OnStoppingEvent()
+        {
+            if (IsBotVisible)
+            {
+                HideBot(); //Hide bot before extension closes
+            }
+        }
+
+        private void Extension_OnDataInterceptEvent(DataInterceptedEventArgs e)
         {
             if (Extension.Out.SendMsg.Match(e)) // User sent a message.
             {
@@ -52,7 +61,7 @@ namespace Geode.Extension
                 if (RequestedFriendID == BotID) // Bot received a message.
                 {
                     e.IsBlocked = true;
-                    OnMessageReceived?.Invoke(this, RequestedMessage);
+                    OnMessageReceived.Invoke(RequestedMessage);
                     if (RequestedMessage.ToLower() == "/exit")
                     {
                         HideBot();
@@ -100,7 +109,7 @@ namespace Geode.Extension
             if (Extension.In.FriendRequests.Match(e) && IsBotVisible) // Show Bot when the initial console load is complete.
             {
                 ShowBot();
-                OnBotLoaded.Invoke(this, "ConsoleLoad");
+                OnBotLoaded.Invoke("ConsoleLoad");
             }
         }
 
