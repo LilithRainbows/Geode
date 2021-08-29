@@ -5,6 +5,7 @@ Class MainWindow
     Public WithEvents ConsoleBot As ConsoleBot
 
     Private Sub MainWindow_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
+        Visibility = Visibility.Hidden 'Hide window on startup
         Extension = New GeodeExtension("ConsoleBotVB", "Geode examples.", "Lilith") 'Instantiate extension
         Extension.Start() 'Start extension
         ConsoleBot = New ConsoleBot(Extension, "VB example") 'Instantiate a new ConsoleBot
@@ -42,6 +43,7 @@ Class MainWindow
     End Sub
 
     Private Sub Extension_OnCriticalErrorEvent(e As String) Handles Extension.OnCriticalErrorEvent
+        Visibility = Visibility.Visible
         ShowInTaskbar = True
         Activate()
         MsgBox(e & ".", MsgBoxStyle.Critical, "Critical error") 'Show extension critical error

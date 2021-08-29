@@ -6,6 +6,7 @@
     <RootNamespace>LTDHelper</RootNamespace>
     <UseWPF>true</UseWPF>
     <StartupObject>LTDHelper.SingleInstance</StartupObject>
+    <ApplicationIcon>IconLTD.ico</ApplicationIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

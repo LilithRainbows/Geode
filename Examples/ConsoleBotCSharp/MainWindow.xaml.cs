@@ -16,6 +16,7 @@ namespace ConsoleBotCSharp
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            Visibility = Visibility.Hidden; //Hide window on startup
             Extension = new GeodeExtension("ConsoleBotCSharp", "Geode examples.", "Lilith"); //Instantiate extension
             //Add extension event handlers
             Extension.OnCriticalErrorEvent += Extension_OnCriticalErrorEvent;
@@ -88,6 +89,7 @@ namespace ConsoleBotCSharp
 
         private void Extension_OnCriticalErrorEvent(string e)
         {
+            Visibility = Visibility.Visible;
             ShowInTaskbar = true;
             Activate();
             MessageBox.Show(e + ".", "Critical error", MessageBoxButton.OK, MessageBoxImage.Error); //Show extension critical error

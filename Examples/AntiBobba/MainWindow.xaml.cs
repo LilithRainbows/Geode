@@ -20,6 +20,7 @@ namespace AntiBobba
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            Visibility = Visibility.Hidden; //Hide window on startup
             Extension = new GeodeExtension("AntiBobba", "Geode examples.", "Lilith"); // Instantiate extension
             //Add extension event handlers
             Extension.OnDataInterceptEvent += Extension_OnDataInterceptEvent;
@@ -149,6 +150,7 @@ namespace AntiBobba
 
         private void Extension_OnCriticalErrorEvent(string e)
         {
+            Visibility = Visibility.Visible;
             ShowInTaskbar = true;
             Activate();
             MessageBox.Show(e + ".", "Critical error", MessageBoxButton.OK, MessageBoxImage.Error); //Show extension critical error
