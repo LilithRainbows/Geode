@@ -23,10 +23,15 @@ Class MainWindow
     Async Function TryToBuyLTD() As Task
         If TaskStarted Then
             Try
+                Dim SW As Stopwatch = Stopwatch.StartNew()
                 Extension.SendToServerAsync(Extension.Out.GetCatalogIndex, "NORMAL")
                 Dim CatalogIndexData = Await Extension.WaitForPacketAsync(Extension.In.CatalogIndex, 1000)
                 Dim CatalogRoot As New Geode.Habbo.Packages.HCatalogNode(CatalogIndexData.Packet)
                 Dim LTDCategory = FindCatalogCategory(CatalogRoot.Children, "ler") 'You can test with other category like: set_mode
+                Dim CurrentTimeout = 125 - SW.ElapsedMilliseconds
+                If CurrentTimeout > 0 Then
+                    Await Task.Delay(CurrentTimeout) 'We need to ensure at least 125ms timeout since first packet
+                End If
                 Extension.SendToServerAsync(Extension.Out.PurchaseFromCatalog, LTDCategory.PageId, LTDCategory.OfferIds(0), "", 1)
                 If Await Extension.WaitForPacketAsync(Extension.In.PurchaseOK, 500) IsNot Nothing Then
                     ConsoleBot.BotSendMessage("Successfully purchased an LTD.")
@@ -35,6 +40,7 @@ Class MainWindow
                 Else
                     Throw New Exception("LTD not purchased!")
                 End If
+                ConsoleBot.BotSendMessage("Use /exit to finish.")
             Catch
                 TryToBuyLTD()
             End Try
