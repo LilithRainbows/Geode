@@ -94,7 +94,7 @@ Class MainWindow
                         ConsoleBot.BotSendMessage(AppTranslator.ReducedCommandsList(CurrentLanguageInt))
                     End If
                 Case "/force", "/forzar", "/forçar"
-                    If TaskStarted = False Then
+                    If TaskBlocked = False And TaskCanBeStopped = True Then
                         ConsoleBot.BotSendMessage(AppTranslator.StartedMessage(CurrentLanguageInt))
                         TestMode = False
                         TaskStarted = True
