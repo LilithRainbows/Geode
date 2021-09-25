@@ -170,65 +170,80 @@ Module SingleInstance
 End Module
 
 Public Class AppTranslator
-    '0=English 1=Spanish
+    '0=English 1=Spanish 2=Portuguese-BR
     Public Shared WelcomeMessage As String() = {
         "Welcome |",
-        "Bienvenidx |"
+        "Bienvenidx |",
+        "Bem-vindo |"
     }
     Public Shared FullCommandsList As String() = {
         "Available commands: /start /stop /force /test /exit",
-        "Comandos disponibles: /start /stop /force /test /exit"
+        "Comandos disponibles: /start /stop /force /test /exit",
+        "Comando disponíveis: /start /stop /force /test /exit"
     }
     Public Shared ReducedCommandsList As String() = {
         "Available commands: /stop /exit",
-        "Comandos disponibles: /stop /exit"
+        "Comandos disponibles: /stop /exit",
+        "Comandos disponíveis: /stop /exit"
     }
     Public Shared BuyAdvice As String() = {
         "It is recommended to have the catalog closed and not be in a room.",
-        "Se recomienda dejar el catalogo cerrado y no estar en una sala."
+        "Se recomienda dejar el catalogo cerrado y no estar en una sala.",
+        "É recomendado deixar o catálogo fechado e não estar em uma sala."
     }
     Public Shared RiskAdvice As String() = {
         "Use at your own risk!",
-        "Usala bajo tu propio riesgo!"
+        "Usala bajo tu propio riesgo!",
+        "Use pelo seu próprio risco!"
     }
     Public Shared PurchaseOK As String() = {
         "Successfully purchased an LTD |",
-        "Adquiriste exitosamente un LTD |"
+        "Adquiriste exitosamente un LTD |",
+        "Comprou com sucesso um LTD |"
     }
     Public Shared PurchaseFailed As String() = {
         "Error while purshasing an LTD!",
-        "Error al comprar un LTD!"
+        "Error al comprar un LTD!",
+        "Erro ao comprar um LTD!"
     }
     Public Shared ExitAdvice As String() = {
         "Use /exit to finish.",
-        "Usa /exit para finalizar."
+        "Usa /exit para finalizar.",
+        "Use /exit para finalizar."
     }
     Public Shared StartedMessage As String() = {
         "I will try to buy the LTD, you can use /stop to finish.",
-        "Intentare comprar un LTD, puedes usar /stop para finalizar."
+        "Intentare comprar un LTD, puedes usar /stop para finalizar.",
+        "Vou tentar comprar o LTD, você pode usar /stop para finalizar."
     }
     Public Shared StoppedMessage As String() = {
         "Stopped, you can use /start to try again.",
-        "Detenida, puedes usar /start para reintentar."
+        "Detenida, puedes usar /start para reintentar.",
+        "Parado, você pode usar /start para tentar novamente."
     }
     Public Shared CatalogIndexLoaded As String() = {
         "[Catalog index loaded]",
-        "[Indice del catalogo cargado]"
+        "[Indice del catalogo cargado]",
+        "[Índice do catálogo carregado]"
     }
     Public Shared SimulatingPageClick As String() = {
         "[Simulating page click]",
-        "[Simulando clic de pagina]"
+        "[Simulando clic de pagina]",
+        "[Simulando um clique de página]"
     }
     Public Shared TryingToBuy As String() = {
         "[Trying to buy]",
-        "[Intentando comprar]"
+        "[Intentando comprar]",
+        "[Tentando comprar]"
     }
     Public Shared CatalogUpdateReceived As String() = {
         "[Catalog update received]",
-        "[Actualizacion del catalogo recibida]"
+        "[Actualizacion del catalogo recibida]",
+        "[Atualização do catálogo recebida]"
     }
     Public Shared StopFailed As String() = {
         "Task cannot be stopped right now!",
-        "La tarea no puede detenerse ahora!"
+        "La tarea no puede detenerse ahora!",
+        "A tarefa não pode ser parada no momento!"
 }
 End Class
