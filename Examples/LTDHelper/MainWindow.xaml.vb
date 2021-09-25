@@ -13,8 +13,11 @@ Class MainWindow
 
     Private Sub MainWindow_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
         Visibility = Visibility.Hidden 'Hide window on startup
-        If System.Globalization.CultureInfo.CurrentCulture.Name.ToLower.StartsWith("es") Then
+        If Globalization.CultureInfo.CurrentCulture.Name.ToLower.StartsWith("es") Then
             CurrentLanguageInt = 1
+        End If
+        If Globalization.CultureInfo.CurrentCulture.Name.ToLower.StartsWith("pt") Then
+            CurrentLanguageInt = 2
         End If
         Extension = New GeodeExtension("LTDHelper", "Geode examples.", "Lilith") 'Instantiate extension
         Extension.Start() 'Start extension
