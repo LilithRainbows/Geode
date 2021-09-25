@@ -17,6 +17,7 @@ namespace Geode.Extension
         private bool IsBotVisible = false;
         public event Action<string> OnBotLoaded;
         public event Action<string> OnMessageReceived;
+        public string CustomExitCommand = "/exit";
 
         public ConsoleBot(GeodeExtension Extension, string BotName, string BotMotto = "Console bot.", string BotLook = "hd-3704-29.ch-3135-95.lg-3136-95", string BotBadges = "BOT FR17A NO83 ITB26 NL446", string BotCreationDate = "W-W-1984", string BotCreatorName = "Lilith", string BotCreatorLook = "hr-3870-45.hd-600-10.ch-665-71.lg-3781-100-71.ha-3614-91-95.he-3469-1412.fa-3276-1412.ca-3702-71-71")
         {
@@ -62,7 +63,7 @@ namespace Geode.Extension
                 {
                     e.IsBlocked = true;
                     OnMessageReceived.Invoke(RequestedMessage);
-                    if (RequestedMessage.ToLower() == "/exit")
+                    if (RequestedMessage.ToLower() == "/exit" || RequestedMessage.ToLower() == CustomExitCommand.ToLower())
                     {
                         HideBot();
                         Extension.DisableEventHandlers = true; // To avoid infinite event handler loop

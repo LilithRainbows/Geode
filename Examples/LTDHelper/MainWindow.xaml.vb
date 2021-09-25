@@ -9,7 +9,7 @@ Class MainWindow
     Public TaskBlocked As Boolean = False
     Public TestMode As Boolean = False
     Public CatalogCategory As String() = {"ler", "set_mode"}
-    Public TaskCanBeStopped As Boolean = False
+    Public TaskCanBeStopped As Boolean = True
 
     Private Sub MainWindow_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
         Visibility = Visibility.Hidden 'Hide window on startup
@@ -43,8 +43,8 @@ Class MainWindow
                 Dim CatalogRoot As New Geode.Habbo.Packages.HCatalogNode(CatalogIndexData.Packet)
                 Dim LTDCategory = FindCatalogCategory(CatalogRoot.Children, CatalogCategory(Convert.ToInt32(TestMode)))
                 Await Task.Delay(New Random().Next(500, 1000))
-                Extension.SendToServerAsync(Extension.Out.GetCatalogPage, LTDCategory.PageId, -1, "NORMAL")
                 ConsoleBot.BotSendMessage(AppTranslator.SimulatingPageClick(CurrentLanguageInt))
+                Extension.SendToServerAsync(Extension.Out.GetCatalogPage, LTDCategory.PageId, -1, "NORMAL")
                 Await Task.Delay(New Random().Next(500, 1000))
                 ConsoleBot.BotSendMessage(AppTranslator.TryingToBuy(CurrentLanguageInt))
                 Extension.SendToServerAsync(Extension.Out.PurchaseFromCatalog, LTDCategory.PageId, LTDCategory.OfferIds(0), "", 1)
@@ -84,7 +84,7 @@ Class MainWindow
     Private Sub ConsoleBot_OnMessageReceived(e As String) Handles ConsoleBot.OnMessageReceived
         If TaskBlocked = False Then
             Select Case e.ToLower 'Handle received message
-                Case "/test"
+                Case "/test", "/probar", "/testar"
                     If TaskStarted = False Then
                         ConsoleBot.BotSendMessage(AppTranslator.StartedMessage(CurrentLanguageInt))
                         TestMode = True
@@ -93,7 +93,7 @@ Class MainWindow
                     Else
                         ConsoleBot.BotSendMessage(AppTranslator.ReducedCommandsList(CurrentLanguageInt))
                     End If
-                Case "/force"
+                Case "/force", "/forzar", "/forçar"
                     If TaskStarted = False Then
                         ConsoleBot.BotSendMessage(AppTranslator.StartedMessage(CurrentLanguageInt))
                         TestMode = False
@@ -102,7 +102,7 @@ Class MainWindow
                     Else
                         ConsoleBot.BotSendMessage(AppTranslator.ReducedCommandsList(CurrentLanguageInt))
                     End If
-                Case "/start"
+                Case "/start", "/iniciar", "/começar"
                     If TaskStarted = False Then
                         ConsoleBot.BotSendMessage(AppTranslator.StartedMessage(CurrentLanguageInt))
                         TestMode = False
@@ -110,7 +110,7 @@ Class MainWindow
                     Else
                         ConsoleBot.BotSendMessage(AppTranslator.ReducedCommandsList(CurrentLanguageInt))
                     End If
-                Case "/stop"
+                Case "/stop", "/detener", "/parar"
                     If TaskStarted Then
                         If TaskCanBeStopped = True Then
                             ConsoleBot.BotSendMessage(AppTranslator.StoppedMessage(CurrentLanguageInt))
@@ -121,6 +121,8 @@ Class MainWindow
                     Else
                         ConsoleBot.BotSendMessage(AppTranslator.FullCommandsList(CurrentLanguageInt))
                     End If
+                Case "/salir", "/sair"
+                    ConsoleBot.CustomExitCommand = e
                 Case Else
                     If TaskStarted = False Then
                         ConsoleBot.BotSendMessage(AppTranslator.FullCommandsList(CurrentLanguageInt))
@@ -139,9 +141,10 @@ Class MainWindow
                 e.IsBlocked = True
             End If
         End If
-        If Extension.In.CatalogPublished.Match(e) Then
-            If TaskStarted = True Then
+        If Extension.In.CatalogPublished.Match(e) Then 'Catalog update request received from server
+            If TaskStarted = True And TaskCanBeStopped = True Then
                 ConsoleBot.BotSendMessage(AppTranslator.CatalogUpdateReceived(CurrentLanguageInt))
+                TestMode = False
                 TryToBuyLTD()
             End If
         End If
@@ -181,13 +184,13 @@ Public Class AppTranslator
     }
     Public Shared FullCommandsList As String() = {
         "Available commands: /start /stop /force /test /exit",
-        "Comandos disponibles: /start /stop /force /test /exit",
-        "Comando disponíveis: /start /stop /force /test /exit"
+        "Comandos disponibles: /iniciar /detener /forzar /probar /salir",
+        "Comando disponíveis: /começar /parar /forçar /testar /sair"
     }
     Public Shared ReducedCommandsList As String() = {
         "Available commands: /stop /exit",
-        "Comandos disponibles: /stop /exit",
-        "Comandos disponíveis: /stop /exit"
+        "Comandos disponibles: /detener /salir",
+        "Comandos disponíveis: /parar /sair"
     }
     Public Shared BuyAdvice As String() = {
         "It is recommended to have the catalog closed and not be in a room.",
@@ -216,13 +219,13 @@ Public Class AppTranslator
     }
     Public Shared StartedMessage As String() = {
         "I will try to buy the LTD, you can use /stop to finish.",
-        "Intentare comprar un LTD, puedes usar /stop para finalizar.",
-        "Vou tentar comprar o LTD, você pode usar /stop para finalizar."
+        "Intentare comprar un LTD, puedes usar /detener para finalizar.",
+        "Vou tentar comprar o LTD, você pode usar /parar para finalizar."
     }
     Public Shared StoppedMessage As String() = {
         "Stopped, you can use /start to try again.",
-        "Detenida, puedes usar /start para reintentar.",
-        "Parado, você pode usar /start para tentar novamente."
+        "Detenida, puedes usar /iniciar para reintentar.",
+        "Parado, você pode usar /começar para tentar novamente."
     }
     Public Shared CatalogIndexLoaded As String() = {
         "[Catalog index loaded]",
