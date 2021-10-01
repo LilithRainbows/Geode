@@ -51,6 +51,14 @@ namespace Geode.Habbo.Packages
             {
                 StaticClass = packet.ReadUTF8();
             }
+            else
+            {
+                try
+                {
+                    OwnerName = packet.ReadUTF8();
+                }
+                catch { }
+            }
         }
 
         public static HFloorObject[] Parse(HPacket packet)

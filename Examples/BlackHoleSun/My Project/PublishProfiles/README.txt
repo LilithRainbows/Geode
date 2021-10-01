@@ -1,0 +1,1 @@
+If you want to actually generate a single publish file set IncludeNativeLibrariesForSelfExtract property to true.

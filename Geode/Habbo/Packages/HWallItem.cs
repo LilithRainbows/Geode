@@ -36,6 +36,10 @@ namespace Geode.Habbo.Packages
             SecondsToExpiration = packet.ReadInt32();
             UsagePolicy = (HUsagePolicy)packet.ReadInt32();
             OwnerId = packet.ReadInt32();
+            try
+            {
+                OwnerName = packet.ReadUTF8();
+            } catch { }
 
             if (float.TryParse(Data, out _))
             {

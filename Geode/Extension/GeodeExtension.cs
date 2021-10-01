@@ -536,13 +536,24 @@ namespace Geode.Extension
                 _container.OnEntitiesLoaded(entities.Length);
             }
             else if (In.Items.Match(data))
-                {
+            {
                 HWallItem[] wallItems = HWallItem.Parse(data.Packet);
                 foreach (HWallItem wallItem in wallItems)
                 {
                     _wallItems[wallItem.Id] = wallItem;
                 }
                 _container.OnWallItemsLoaded(wallItems.Length);
+            }
+            else if (In.ItemAdd.Match(data))
+            {
+                HWallItem wallItem = new HWallItem(data.Packet);
+                _wallItems[wallItem.Id] = wallItem;
+            }
+            else if (In.ItemRemove.Match(data))
+            {
+                int wallItemId = int.Parse(data.Packet.ReadUTF8());
+                data.Packet.Position = 0;
+                _wallItems.Remove(wallItemId);
             }
             else if (In.Objects.Match(data))
             {
@@ -552,6 +563,17 @@ namespace Geode.Extension
                     _floorObjects[floorItem.Id] = floorItem;
                 }
                 _container.OnFloorObjectsLoaded(floorObjects.Length);
+            }
+            else if (In.ObjectAdd.Match(data))
+            {
+                HFloorObject floorObject = new HFloorObject(data.Packet);
+                _floorObjects[floorObject.Id] = floorObject;
+            }
+            else if (In.ObjectRemove.Match(data))
+            {
+                int floorObjectId = int.Parse(data.Packet.ReadUTF8());
+                data.Packet.Position = 0;
+                _floorObjects.Remove(floorObjectId);
             }
             else if (In.FloorHeightMap.Match(data))
             {
