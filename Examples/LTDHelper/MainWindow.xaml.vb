@@ -10,6 +10,9 @@ Class MainWindow
     Public TestMode As Boolean = False
     Public CatalogCategory As String() = {"ler", "set_mode"}
     Public TaskCanBeStopped As Boolean = True
+    Public PurchaseStepsDelayMs As Integer = -666
+    Public CreditLimit As Integer = 0
+    Public DiamondLimit As Integer = 0
 
     Private Sub MainWindow_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
         Visibility = Visibility.Hidden 'Hide window on startup
@@ -29,25 +32,35 @@ Class MainWindow
         ConsoleBot.BotSendMessage(AppTranslator.WelcomeMessage(CurrentLanguageInt))
         ConsoleBot.BotSendMessage(AppTranslator.BuyAdvice(CurrentLanguageInt))
         ConsoleBot.BotSendMessage(AppTranslator.RiskAdvice(CurrentLanguageInt))
-        ConsoleBot.BotSendMessage(AppTranslator.FullCommandsList(CurrentLanguageInt))
+        ConsoleBot.BotSendMessage("")
+        ConsoleBot.BotSendMessage(AppTranslator.PurchaseStepsDelaySet(CurrentLanguageInt))
     End Sub
 
     Async Function TryToBuyLTD() As Task
         TaskCanBeStopped = False
         If TaskStarted = True Then
             Try
-                Await Task.Delay(New Random().Next(500, 1000))
                 Extension.SendToServerAsync(Extension.Out.GetCatalogIndex, "NORMAL")
                 Dim CatalogIndexData = Await Extension.WaitForPacketAsync(Extension.In.CatalogIndex, 4000)
                 ConsoleBot.BotSendMessage(AppTranslator.CatalogIndexLoaded(CurrentLanguageInt))
                 Dim CatalogRoot As New Geode.Habbo.Packages.HCatalogNode(CatalogIndexData.Packet)
                 Dim LTDCategory = FindCatalogCategory(CatalogRoot.Children, CatalogCategory(Convert.ToInt32(TestMode)))
-                Await Task.Delay(New Random().Next(500, 1000))
-                ConsoleBot.BotSendMessage(AppTranslator.SimulatingPageClick(CurrentLanguageInt))
+                If LTDCategory.Visible = False Then
+                    ConsoleBot.BotSendMessage(AppTranslator.LtdCategoryVisibilityError(CurrentLanguageInt))
+                    Throw New Exception("LTDCategory is not yet visible!")
+                End If
+                Await Task.Delay(PurchaseStepsDelayMs)
                 Extension.SendToServerAsync(Extension.Out.GetCatalogPage, LTDCategory.PageId, -1, "NORMAL")
-                Await Task.Delay(New Random().Next(500, 1000))
+                Dim LTDPageData = Await Extension.WaitForPacketAsync(Extension.In.CatalogPage, 2000)
+                ConsoleBot.BotSendMessage(AppTranslator.CatalogPageLoaded(CurrentLanguageInt))
+                Dim LTDPage As New Geode.Habbo.Packages.HCatalogPage(LTDPageData.Packet)
+                If (CreditLimit < LTDPage.Offers(0).CreditCost) Or (DiamondLimit < LTDPage.Offers(0).OtherCurrencyCost) Then
+                    ConsoleBot.BotSendMessage(AppTranslator.CurrencyLimitError(CurrentLanguageInt))
+                    Throw New Exception("Maximum currency value exceeded!")
+                End If
+                Await Task.Delay(PurchaseStepsDelayMs)
                 ConsoleBot.BotSendMessage(AppTranslator.TryingToBuy(CurrentLanguageInt))
-                Extension.SendToServerAsync(Extension.Out.PurchaseFromCatalog, LTDCategory.PageId, LTDCategory.OfferIds(0), "", 1)
+                Extension.SendToServerAsync(Extension.Out.PurchaseFromCatalog, LTDPage.Id, LTDPage.Offers(0).Id, "", 1)
                 If Await Extension.WaitForPacketAsync(Extension.In.PurchaseOK, 2000) IsNot Nothing Then
                     ConsoleBot.BotSendMessage(AppTranslator.PurchaseOK(CurrentLanguageInt))
                     TaskBlocked = True
@@ -77,11 +90,53 @@ Class MainWindow
         Return Nothing
     End Function
 
+    Private Function ResetVariables()
+        TaskStarted = False
+        TaskBlocked = False
+        TestMode = False
+        TaskCanBeStopped = True
+        PurchaseStepsDelayMs = -666
+        CreditLimit = 0
+        DiamondLimit = 0
+    End Function
+
     Private Sub ConsoleBot_OnBotLoaded(e As String) Handles ConsoleBot.OnBotLoaded
+        ResetVariables() 'Reset variables when ConsoleBot loaded
         BotWelcome() 'Show welcome message when ConsoleBot loaded
     End Sub
 
     Private Sub ConsoleBot_OnMessageReceived(e As String) Handles ConsoleBot.OnMessageReceived
+        If PurchaseStepsDelayMs < 0 Then
+            Dim PurchaseStepsDelayInput As Integer = PurchaseStepsDelayMs
+            If Integer.TryParse(e, PurchaseStepsDelayInput) And PurchaseStepsDelayInput >= 0 Then
+                PurchaseStepsDelayMs = PurchaseStepsDelayInput
+                ConsoleBot.BotSendMessage(AppTranslator.CreditSet(CurrentLanguageInt))
+                Return
+            Else
+                ConsoleBot.BotSendMessage(AppTranslator.PurchaseStepsDelaySet(CurrentLanguageInt))
+                Return
+            End If
+        End If
+        If CreditLimit = 0 Then
+            Dim TempCreditInput As Integer = 0
+            If Integer.TryParse(e, TempCreditInput) And TempCreditInput > 0 Then
+                CreditLimit = TempCreditInput
+                ConsoleBot.BotSendMessage(AppTranslator.DiamondSet(CurrentLanguageInt))
+                Return
+            Else
+                ConsoleBot.BotSendMessage(AppTranslator.CreditSet(CurrentLanguageInt))
+                Return
+            End If
+        End If
+        If DiamondLimit = 0 Then
+            Dim TempDiamondInput As Integer = 0
+            If Integer.TryParse(e, TempDiamondInput) And TempDiamondInput > 0 Then
+                DiamondLimit = TempDiamondInput
+            Else
+                ConsoleBot.BotSendMessage(AppTranslator.DiamondSet(CurrentLanguageInt))
+                Return
+            End If
+        End If
         If TaskBlocked = False Then
             Select Case e.ToLower 'Handle received message
                 Case "/test", "/probar", "/testar"
@@ -137,7 +192,12 @@ Class MainWindow
 
     Private Sub Extension_OnDataInterceptEvent(e As DataInterceptedEventArgs) Handles Extension.OnDataInterceptEvent
         If Extension.In.ErrorReport.Match(e) Or Extension.In.PurchaseError.Match(e) Or Extension.In.PurchaseNotAllowed.Match(e) Or Extension.In.NotEnoughBalance.Match(e) Then 'Ignore common purchase errors
-            If TaskStarted = True Then
+            If TaskStarted = True And TaskCanBeStopped = False Then
+                e.IsBlocked = True
+            End If
+        End If
+        If Extension.Out.GetCatalogIndex.Match(e) Then 'Ignore unhandled catalog index loading requests
+            If TaskStarted = True And TaskCanBeStopped = True Then
                 e.IsBlocked = True
             End If
         End If
@@ -208,9 +268,9 @@ Public Class AppTranslator
         "Comprou com sucesso um LTD |"
     }
     Public Shared PurchaseFailed As String() = {
-        "Error while purshasing an LTD!",
-        "Error al comprar un LTD!",
-        "Erro ao comprar um LTD!"
+        "[Error]" & vbCr & "We will try again if the catalog is updated.",
+        "[Error]" & vbCr & "Volveremos a intentarlo si el catalogo se actualiza.",
+        "[Erro]" & vbCr & "Tentaremos novamente se o catálogo for atualizado."
     }
     Public Shared ExitAdvice As String() = {
         "Use /exit to finish.",
@@ -232,10 +292,10 @@ Public Class AppTranslator
         "[Indice del catalogo cargado]",
         "[Índice do catálogo carregado]"
     }
-    Public Shared SimulatingPageClick As String() = {
-        "[Simulating page click]",
-        "[Simulando clic de pagina]",
-        "[Simulando um clique de página]"
+    Public Shared CatalogPageLoaded As String() = {
+        "[Catalog page loaded]",
+        "[Pagina del catalogo cargada]",
+        "[Página do catálogo carregada]"
     }
     Public Shared TryingToBuy As String() = {
         "[Trying to buy]",
@@ -251,5 +311,30 @@ Public Class AppTranslator
         "Task cannot be stopped right now!",
         "La tarea no puede detenerse ahora!",
         "A tarefa não pode ser parada no momento!"
+}
+    Public Shared PurchaseStepsDelaySet As String() = {
+        "Enter the milliseconds of delay in the purchase steps (0=no delay)",
+        "Ingresa los milisegundos de demora en los pasos de compra (0=sin demora)",
+        "Insira os milissegundos de atraso nas etapas de compra (0=sem atraso)"
+}
+    Public Shared CreditSet As String() = {
+        "Enter the maximum amount of credits you can spend.",
+        "Ingresa la cantidad maxima de creditos que puedes gastar.",
+        "Insira a quantidade máxima de créditos que você pode gastar."
+}
+    Public Shared DiamondSet As String() = {
+        "Enter the maximum amount of diamonds you can spend.",
+        "Ingresa la cantidad maxima de diamantes que puedes gastar.",
+        "Insira a quantidade máxima de diamantes que você pode gastar."
+}
+    Public Shared CurrencyLimitError As String() = {
+        "The LTD worth more than what you allowed to spend!",
+        "El LTD vale mas caro de lo que permitiste gastar!",
+        "O LTD vale mais do que você permitiu gastar!"
+}
+    Public Shared LtdCategoryVisibilityError As String() = {
+        "The LTD category is not yet visible in the catalog!",
+        "La categoria LTD aun no esta visible en el catalogo!",
+        "A categoria LTD ainda não está visível no catálogo!"
 }
 End Class
