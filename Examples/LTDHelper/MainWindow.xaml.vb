@@ -23,10 +23,49 @@ Class MainWindow
             CurrentLanguageInt = 2
         End If
         Extension = New GeodeExtension("LTDHelper", "Geode examples.", "Lilith") 'Instantiate extension
-        Extension.Start() 'Start extension
+        Extension.Start(GetReadyToConnectGEarthPort) 'Start extension
         ConsoleBot = New ConsoleBot(Extension, "LTDHelper") 'Instantiate a new ConsoleBot
         ConsoleBot.ShowBot() 'Show ConsoleBot
     End Sub
+
+    Function GetReadyToConnectGEarthPort() As Integer
+        Dim NetStatProcess As New Process()
+        NetStatProcess.StartInfo.FileName = "netstat.exe"
+        NetStatProcess.StartInfo.Arguments = "-ano"
+        NetStatProcess.StartInfo.RedirectStandardOutput = True
+        NetStatProcess.StartInfo.UseShellExecute = False
+        NetStatProcess.StartInfo.CreateNoWindow = True
+        NetStatProcess.Start()
+        Dim NSOutput = NetStatProcess.StandardOutput.ReadToEnd()
+        Dim ExtensionProcesses = Process.GetProcessesByName(Process.GetCurrentProcess.ProcessName)
+        Dim DefaultPort = 9092
+        For PossiblePort As Integer = DefaultPort To DefaultPort + 100
+            Dim NSPidFilterOK As Boolean = False
+            Dim ExtensionIsUsingCurrentPort = False
+            Dim IsPortListened = False
+            For Each NSLine In NSOutput.Split(Environment.NewLine)
+                If NSLine.EndsWith("PID") Then
+                    NSPidFilterOK = True
+                End If
+                If NSPidFilterOK Then
+                    For Each ExtensionProcess In ExtensionProcesses
+                        If NSLine.EndsWith(" " & ExtensionProcess.Id) Then
+                            If NSLine.Contains(":" & PossiblePort & " ") Then
+                                ExtensionIsUsingCurrentPort = True
+                            End If
+                        End If
+                    Next
+                    If NSLine.Contains(":" & PossiblePort & " ") And NSLine.Contains("LISTENING") Then
+                        IsPortListened = True
+                    End If
+                End If
+            Next
+            If IsPortListened And ExtensionIsUsingCurrentPort = False Then
+                Return PossiblePort
+            End If
+        Next
+        Return DefaultPort
+    End Function
 
     Sub BotWelcome()
         ConsoleBot.BotSendMessage(AppTranslator.WelcomeMessage(CurrentLanguageInt))
@@ -218,22 +257,6 @@ Class MainWindow
         Environment.Exit(0)
     End Sub
 End Class
-
-Module SingleInstance
-    Sub Main()
-        Dim noPreviousInstance As Boolean
-
-        Using m As New Threading.Mutex(True, "LTDHelper for Geode", noPreviousInstance)
-            If Not noPreviousInstance Then
-                MessageBox.Show("Extension is already started!", "Error", MessageBoxButton.OK, MessageBoxImage.Error)
-            Else
-                Dim mainWindow As New MainWindow()
-                Dim app As New Application()
-                app.Run(mainWindow)
-            End If
-        End Using
-    End Sub
-End Module
 
 Public Class AppTranslator
     '0=English 1=Spanish 2=Portuguese-BR
