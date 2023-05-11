@@ -64,6 +64,8 @@ Class MainWindow
                 Return PossiblePort
             End If
         Next
+        MsgBox("Could not detect an available GEarth port.", MsgBoxStyle.Critical, "Error")
+        Process.GetCurrentProcess.Kill()
         Return DefaultPort
     End Function
 
