@@ -1,6 +1,7 @@
 # Geode
 
 <b>WARNING:</b><br>
+<b>NO LONGER SUPPORTED</b><br>
 G-Earth 1.4.1 or later is required, only Flash/AIR client is supported.<br>
 
 <b>Guide for end users:</b>
